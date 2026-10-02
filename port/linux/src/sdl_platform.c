@@ -332,19 +332,31 @@ static BOOL platform_fullscreen_setting(void)
 	return !config_boolean("debug.hidden_window") && config_boolean("display.fullscreen");
 }
 
-/* whether the game is, or is to be, fullscreen, and if so the size in
-pixels of the display it fills (d3d8_gl.c draws at that resolution) */
+/* the size in pixels the game draws its picture at (d3d8_gl.c): the
+window's, which is the display's while the game is fullscreen, and follows
+the player's resizing of the window otherwise */
 BOOL platform_screen_mode(long *width, long *height)
 {
 	SDL_DisplayID display;
 	const SDL_DisplayMode *mode;
+	int window_width, window_height;
 
-	if (platform_window ? !(SDL_GetWindowFlags(platform_window) & SDL_WINDOW_FULLSCREEN) :
-		!platform_fullscreen_setting() || !platform_sdl_initialize())
+	if (platform_window)
 	{
-		return FALSE;
+		platform_video_drawable_size(&window_width, &window_height);
+		if (window_width <= 0 || window_height <= 0)
+			return FALSE;
+		*width = window_width;
+		*height = window_height;
+		return TRUE;
 	}
-	display = platform_window ? SDL_GetDisplayForWindow(platform_window) : SDL_GetPrimaryDisplay();
+	/* no window yet, as the renderer asks for the screen's shape before the
+	device makes one: the display it is about to fill, and the Xbox's
+	640x480 for a window, which the first frame then changes (the window's
+	pixels are its own until it exists) */
+	if (!platform_fullscreen_setting() || !platform_sdl_initialize())
+		return FALSE;
+	display = SDL_GetPrimaryDisplay();
 	mode = display ? SDL_GetDesktopDisplayMode(display) : NULL;
 	if (!mode)
 		return FALSE;
@@ -411,10 +423,10 @@ BOOL platform_video_initialize(unsigned long width, unsigned long height)
 	platform_window = SDL_CreateWindow(title, (int)(width * scale), (int)(height * scale),
 		SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN);
 #else
-	/* fullscreen at the desktop's resolution unless display.fullscreen is
-	false, where the game draws the display's shape at its resolution
-	(d3d8_gl.c); the window size is the windowed mode F11 switches to and
-	from, where it draws 640x480 */
+	/* fullscreen unless display.fullscreen is false, where F11 switches to
+	and from this window; either way the game draws the window's shape at
+	the window's resolution in pixels (d3d8_gl.c), so the size here is the
+	first windowed picture's */
 	platform_window = SDL_CreateWindow(title, (int)(width * scale), (int)(height * scale),
 		SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY |
 		(config_boolean("debug.hidden_window") ? SDL_WINDOW_HIDDEN : 0) |

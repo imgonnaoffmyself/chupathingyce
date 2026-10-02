@@ -74,9 +74,11 @@ static const struct config_setting config_settings[] =
 {
 	{ "display.fullscreen", _config_boolean, DEFAULT_FULLSCREEN, "HALO_FULLSCREEN", _environment_value, _platform_desktop,
 		"Start fullscreen, drawing at the display's resolution and shape; false\n"
-		"starts in a window, which draws the Xbox's 640x480. F11 switches." },
+		"starts in a window, which draws at its own resolution and shape, and so\n"
+		"follows the size you give it. F11 switches." },
 	{ "display.window_scale", _config_integer, "2", "HALO_WINDOW_SCALE", _environment_value, _platform_desktop,
-		"The window's size as a multiple of 640x480 (it can be resized)." },
+		"The window's size as a multiple of 640x480, and so the resolution the\n"
+		"game draws at in it (it can be resized)." },
 	{ "display.screen_width", _config_integer, "0", "HALO_SCREEN_WIDTH", _environment_value, _platform_android,
 		"Columns of the 480-line picture: 0 for the display's shape, 640 for the\n"
 		"Xbox's 4:3." },
