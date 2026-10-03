@@ -173,6 +173,7 @@ the setting for one start of the game. It has priority over the file.
 | `network.signalling_brokers` | three public brokers | `HALO_NET_BROKERS` | The public MQTT brokers (`host:port`, with commas between them) that let the machines of an invite find each other. |
 | `network.stun_servers` | Google and Cloudflare | `HALO_NET_STUN` | The public STUN servers (`host:port`, with commas between them) that give the internet address of a machine. |
 | `discord.application_id` | the application of the project | `HALO_DISCORD_APPLICATION` | The Discord application for invites. Empty: no Discord. |
+| `multiplayer.bots` | `true` | `HALO_MULTIPLAYER_BOTS` | `true`: a slayer game this machine hosts is filled with bots, up to the players its map is for. Refer to "Bots". |
 | `update.auto` | `true` | `HALO_UPDATE_AUTO` | `true`: at start-up, the game looks for a new version. Refer to "Updates". `false`: the game does not look. |
 | `debug.update_answer` | `""` | `HALO_UPDATE_ANSWER` | The answer to the update question, for automatic tests: `yes`, `no` or `never`. Empty: the game asks. |
 | `debug.exit_after` | `0.0` | `HALO_EXIT_AFTER` | The game stops after this number of seconds. `0`: never. |
@@ -293,6 +294,25 @@ results, and all the ports:
 - Compile without fused multiply-add (`-ffp-contract=off`).
 - Use the math functions of musl (`port/include/halo_math.h`,
   `port/third_party/musl-math`), not the math functions of the system.
+
+### Bots
+
+A host fills a slayer game with bots up to the players its map is for
+(`multiplayer.bots`): 6 on putput and ratrace, 16 on bloodgulch, boarding
+action, hang 'em high and sidewinder, 8 on the others. A bot leaves for
+each player who joins, so friends are never kept out by them.
+
+- The host drives them: it makes their input each tick as it makes its own
+  players', and the netcode relays it as it relays any remote player's.
+  Thus the clients see them as they see remote players, and a dedicated
+  server's bots work the same way. Refer to `NETCODE.md`.
+- A bot roams the map, chases the enemy it can see, strafes it, jumps now
+  and then, and shoots with an aim that is a little off and settles on its
+  target. It does not drive vehicles and it plays no objective: the other
+  game types start with no bots.
+- The bots are `game/network_bots.c`; the two hooks the game has for them
+  are in `game/player_queues_new.c` (their input) and
+  `networking/network_game_globals.c` (the lobby's fill).
 
 ### Play on one computer
 

@@ -450,7 +450,14 @@ boolean network_game_server_start_frame(
 	boolean result;
 
 	if (bss_004566dc.server)
+	{
+		/* port: the players a host fills a slayer game with, while it is in
+		its lobby and can still change the settings every machine has
+		(network_bots.c) */
+		network_bots_pregame_update();
+
 		result = network_game_server_idle(bss_004566dc.server);
+	}
 	else
 	{
 		error(_error_silent, "no network game server");

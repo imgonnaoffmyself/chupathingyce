@@ -2217,6 +2217,10 @@ boolean network_game_server_add_player_to_game(
 		if (player->primary_color_index == NONE)
 			get_unique_random_color(server, player);
 
+		/* port: a bot leaves for this player if the game is full of them
+		(network_bots.c) */
+		network_bots_make_room_for_player(&server->game);
+
 		/* (the host chooses the player's slot, which is its datum on every
 		machine: network_game_add_player) */
 		player->player_list_index = NONE;

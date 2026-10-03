@@ -241,6 +241,10 @@ static struct update *update_client_get_update(
 	long update_number);
 static void update_server_take_local_actions(
 	void);
+/* port: the bots', which the host makes as it takes its own players'
+(halo_linux_source_fixups.h's network_bots_action) */
+static void update_server_take_bot_actions(
+	void);
 
 /* ---------- globals */
 
@@ -388,6 +392,7 @@ void update_server_next_update(
 	if (game_connection() == _game_connection_network_server)
 	{
 		update_server_take_local_actions();
+		update_server_take_bot_actions();
 	}
 	update = update_server_get_update(update_number);
 	match_assert(
@@ -1043,6 +1048,25 @@ static void update_server_take_local_actions(
 		{
 			queue->current_action = update_client_globals.saved_action_collection.actions[local_player_index];
 		}
+	}
+}
+
+/* port: the input of the players that are bots, which the host drives as it
+drives its own players and the netcode relays as it relays any remote
+player's (network_bots.c); a player that is not one of them is left as it
+was */
+static void update_server_take_bot_actions(
+	void)
+{
+	short queue_index;
+
+	for (queue_index = 0; queue_index < update_server_globals.queues->count; queue_index++)
+	{
+		struct update_server_queue_datum *queue =
+			(struct update_server_queue_datum *)datum_try_and_get(update_server_globals.queues, queue_index);
+
+		if (queue)
+			network_bots_action(queue_index, &queue->current_action);
 	}
 }
 

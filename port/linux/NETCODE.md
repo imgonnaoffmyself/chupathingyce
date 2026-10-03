@@ -448,6 +448,36 @@ Unity's Netcode for Entities, lightyear, netfox and the Ares source):
   when the shooter saw the target (as far back as the host keeps). A
   report made more than three seconds ago is refused.
 
+## Bots
+
+A host fills a slayer game with bots, up to the players its map is for
+(`multiplayer.bots`; `port/linux/game/network_bots.c`), and one bot leaves
+for each player who joins (`network_game_server_add_player_to_game`), so a
+game is never full of them.
+
+The netcode does not know them. A bot is a player of the host's game whose
+machine has no connection behind it, so:
+
+- No client takes it for a player of its own: the client machines are the
+  ones that joined (`network_distributed_server_machines`), so in the
+  host's plan for a client (`distributed_host_plan_players`) a bot is
+  nobody's own player, and its unit and its input go to every client as a
+  remote player's do.
+- The host sends a bot nothing.
+- Its input is the host's: the host makes it each tick where it takes its
+  local players' (`update_server_take_local_actions`), so it is in the
+  update the clients get, and their machines drive the bot's unit with it.
+  A bot's shots are the host's, as any damage is.
+
+A bot joins in the lobby, before the game starts: the players a game has
+are the ones its settings named when it started, which every machine makes
+(`network_game_create_game_objects`).
+
+The bots' choices come from a random generator of their own. The game's is
+shared by every machine (they all draw the same effects from the same
+seed), and only the host makes these choices, so taking from it would
+leave the host's numbers ahead of its clients'.
+
 ## Testing
 
 `debug.network_test` (`port/linux/game/network_test.c`) hosts or joins a
