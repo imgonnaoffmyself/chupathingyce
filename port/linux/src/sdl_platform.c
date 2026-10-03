@@ -324,6 +324,18 @@ int halo_interpolation_enabled(void)
 	return enabled;
 }
 
+/* whether a host may start its game without another machine
+(multiplayer.start_alone), which the lobby asks every tick
+(networking/network_server_manager.c) */
+int multiplayer_start_alone(void)
+{
+	static int start_alone = -1;
+
+	if (start_alone < 0)
+		start_alone = config_boolean("multiplayer.start_alone");
+	return start_alone;
+}
+
 #ifndef HALO_ANDROID
 /* whether the window opens fullscreen (display.fullscreen), never when it
 is hidden */

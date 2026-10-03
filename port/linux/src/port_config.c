@@ -188,6 +188,13 @@ static const struct config_setting config_settings[] =
 		"host drives them, so its clients see them as it does, and a dedicated\n"
 		"server's do too. Slayer only; false starts no game with bots." },
 
+	{ "multiplayer.start_alone", _config_boolean, "true", "HALO_MULTIPLAYER_START_ALONE", _environment_value,
+		_platform_all,
+		"Let a host start its game without waiting for another machine: its\n"
+		"lobby counts down with one player on one machine. False keeps the\n"
+		"game's rule of two machines, two players and, in a team game, a\n"
+		"player on each team." },
+
 	{ "update.auto", _config_boolean, "true", "HALO_UPDATE_AUTO", _environment_value, _platform_all,
 		"Look for a new version when the game starts, and offer to update to it;\n"
 		"false never looks (the game's \"Do not ask again\" writes false here)." },

@@ -2880,8 +2880,10 @@ boolean server_has_enough_machines(
 	struct network_game_server *server)
 {
 	boolean has_enough_machines;
+	/* port: a host that may start alone waits for no other machine
+	(multiplayer.start_alone) */
 	long minimum_machine_count =
-		network_game_is_splitscreen_local() ? 1 : 2;
+		network_game_is_splitscreen_local() || multiplayer_start_alone() ? 1 : 2;
 	long machine_count = 0;
 	long client_machine_index;
 
@@ -2903,13 +2905,26 @@ boolean server_has_enough_machines(
 	return has_enough_machines;
 }
 
+/* port: whether the host waits for another machine before its game can
+start, which the lobby says on the screen (ui_widget_game_data_input_
+functions.c) */
+boolean network_game_server_needs_more_machines(
+	struct network_game_server *server)
+{
+	return !server_has_enough_machines(server);
+}
+
 boolean server_ok_to_countdown(
 	struct network_game_server *server)
 {
+	/* port: a host that may start alone waits for no second player and no
+	player on the other team either (multiplayer.start_alone) */
+	boolean start_alone = multiplayer_start_alone();
+
 	if (server_has_enough_machines(server) &&
 		server_has_a_player_on_each_machine(server) &&
-		!server_needs_more_teams(server) &&
-		server->game.player_count >= server->game.minimum_players)
+		(start_alone || !server_needs_more_teams(server)) &&
+		server->game.player_count >= (start_alone ? 1 : server->game.minimum_players))
 	{
 		return TRUE;
 	}
@@ -3550,7 +3565,10 @@ void network_game_server_update_countdown(
 				}
 				else
 				{
+					/* port: a host that may start alone counts its lobby down
+					with one machine (multiplayer.start_alone) */
 					if (network_game_should_accept_remote_connections() == FALSE ||
+						multiplayer_start_alone() ||
 						network_game_server_get_client_machine_count(server) > 1)
 					{
 						unsigned long countdown;

@@ -174,6 +174,7 @@ the setting for one start of the game. It has priority over the file.
 | `network.stun_servers` | Google and Cloudflare | `HALO_NET_STUN` | The public STUN servers (`host:port`, with commas between them) that give the internet address of a machine. |
 | `discord.application_id` | the application of the project | `HALO_DISCORD_APPLICATION` | The Discord application for invites. Empty: no Discord. |
 | `multiplayer.bots` | `true` | `HALO_MULTIPLAYER_BOTS` | `true`: a slayer game this machine hosts is filled with bots, up to the players its map is for. Refer to "Bots". |
+| `multiplayer.start_alone` | `true` | `HALO_MULTIPLAYER_START_ALONE` | `true`: a host's game starts without waiting for another machine, its lobby counting down with one player. `false`: the game's rule of two machines, two players and, in a team game, a player on each team. |
 | `update.auto` | `true` | `HALO_UPDATE_AUTO` | `true`: at start-up, the game looks for a new version. Refer to "Updates". `false`: the game does not look. |
 | `debug.update_answer` | `""` | `HALO_UPDATE_ANSWER` | The answer to the update question, for automatic tests: `yes`, `no` or `never`. Empty: the game asks. |
 | `debug.exit_after` | `0.0` | `HALO_EXIT_AFTER` | The game stops after this number of seconds. `0`: never. |
@@ -282,6 +283,10 @@ These are the differences from the Xbox:
 - In campaign and in games of up to 16 players, the game removes garbage
   (bodies, dropped weapons) as on the Xbox. In larger games, it keeps more
   garbage, in proportion to the players.
+- A host does not have to wait for another machine: its lobby counts down
+  and the game starts with the players it has (`multiplayer.start_alone`).
+  The Xbox game would not start a game of one machine. With
+  `multiplayer.bots`, the bots fill it in the meantime.
 - The lobby shows the local machine and the first three remote machines.
   The other machines are also in the game.
 - In free-for-all games, each player is a team.
@@ -310,6 +315,10 @@ each player who joins, so friends are never kept out by them.
   and then, and shoots with an aim that is a little off and settles on its
   target. It does not drive vehicles and it plays no objective: the other
   game types start with no bots.
+- A host may start the game without waiting for another machine
+  (`multiplayer.start_alone`), so a game of one player and its bots needs
+  nobody else: the lobby counts down as it does for any game, and players
+  who join during it take the bots' places.
 - The bots are `game/network_bots.c`; the two hooks the game has for them
   are in `game/player_queues_new.c` (their input) and
   `networking/network_game_globals.c` (the lobby's fill).
