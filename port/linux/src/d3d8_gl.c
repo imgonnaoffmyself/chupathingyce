@@ -62,19 +62,20 @@ struct xgpu_capabilities xgpu_capabilities;
 /* ---------- the screen's width
 
 The Xbox screen is 640x480. The native ports can draw a wider one: 480
-lines, and as many columns as the display's shape gives. On Android that is
-display.screen_width (port_config.c; 640 keeps 4:3); on the desktop, the
-display's shape while the game is fullscreen, and 640 in a window. The
-game's camera derives its horizontal field of view from the viewport, so the
-3D view simply widens. The menus and full-screen overlays are laid out for
-640 columns; while they draw (halo_screen_ui_offset), everything shifts right
-to center them.
+lines, and as many columns as the shape of what the game draws into gives.
+On Android that is display.screen_width (port_config.c; 640 keeps 4:3); on
+the desktop, the display's while the game is fullscreen and the window's
+otherwise. The game's camera derives its horizontal field of view from the
+viewport, so the 3D view simply widens. The menus and full-screen overlays
+are laid out for 640 columns; while they draw (halo_screen_ui_offset),
+everything shifts right to center them.
 
-Fullscreen on the desktop also draws at the display's resolution: render
-targets the size of the screen get that many pixels (screen_scale), and
-viewports, clears and visibility counts are scaled to match, so the game
-still works in its 480 lines. The width and the scale change only between
-frames, after one is presented (halo_screen_commit). */
+The desktop also draws at the pixels it has, fullscreen or not: render
+targets the size of the screen get that many (screen_scale), and viewports,
+clears and visibility counts are scaled to match, so the game still works
+in its 480 lines. The width and the scale change only between frames, after
+one is presented (halo_screen_commit), which is where a window the player
+resized takes effect. */
 
 #define SCREEN_HEIGHT 480
 #define SCREEN_MAXIMUM_WIDTH 1920
@@ -103,19 +104,21 @@ static void screen_mode_choose(long *width, float scale[2])
 	*width &= ~1L;
 	scale[0] = scale[1] = 1.0f;
 #else
-	long display_width, display_height;
+	long pixels_width, pixels_height;
 
 	*width = 640;
 	scale[0] = scale[1] = 1.0f;
-	if (platform_screen_mode(&display_width, &display_height) && display_width > 0 && display_height > 0)
+	/* the display the game fills, or the window it draws in
+	(platform_screen_mode) */
+	if (platform_screen_mode(&pixels_width, &pixels_height) && pixels_width > 0 && pixels_height > 0)
 	{
-		long wanted = (SCREEN_HEIGHT * display_width + display_height / 2) / display_height;
+		long wanted = (SCREEN_HEIGHT * pixels_width + pixels_height / 2) / pixels_height;
 
 		*width = wanted < 640 ? 640 : wanted > SCREEN_MAXIMUM_WIDTH ? SCREEN_MAXIMUM_WIDTH : wanted & ~1L;
-		scale[0] = (float)display_width / (float)*width;
-		scale[1] = (float)display_height / (float)SCREEN_HEIGHT;
-		/* a display narrower or wider than the game can be: the picture
-		keeps its shape and the display blit letterboxes it */
+		scale[0] = (float)pixels_width / (float)*width;
+		scale[1] = (float)pixels_height / (float)SCREEN_HEIGHT;
+		/* a window narrower or wider than the game can be: the picture
+		keeps its shape and the blit letterboxes it */
 		if (*width != wanted && *width != (wanted & ~1L))
 			scale[0] = scale[1] = scale[0] < scale[1] ? scale[0] : scale[1];
 	}

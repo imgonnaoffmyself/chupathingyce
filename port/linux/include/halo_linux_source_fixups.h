@@ -46,4 +46,20 @@ void halo_screen_ui_offset(unsigned char centered);
 /* the mouse in the menus (source/interface/ui_widget.c) */
 #include "halo_ui_pointer.h"
 
+/* whether a host may start its game without waiting for another machine
+(port_config.c's multiplayer.start_alone, which networking/
+network_server_manager.c and the lobby ask). int, and not boolean: this
+header is read before cseries.h has defined one. */
+int multiplayer_start_alone(void);
+
+/* the players a host fills a slayer game with, up to the number of players
+its map is for, and drives as it drives its own players
+(port/linux/game/network_bots.c). int, and not boolean: this header is read
+before cseries.h has defined one. */
+struct network_game;
+struct player_action;
+void network_bots_pregame_update(void);
+void network_bots_make_room_for_player(struct network_game *game);
+int network_bots_action(long player_index, struct player_action *action);
+
 #endif

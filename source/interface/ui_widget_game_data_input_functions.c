@@ -350,6 +350,7 @@ symbols in this file:
 #include "networking/network_game_globals.h"
 #include "networking/network_game_manager.h"
 #include "networking/network_messages.h"
+#include "networking/network_server_manager.h"
 #include "saved games/player_profile.h"
 #include "saved games/playlist_profile.h"
 #include "text/text_group.h"
@@ -1371,8 +1372,11 @@ static void network_pregame_status_screen_update(
 		{
 			short seconds_to_game_start = network_game_client_get_seconds_to_game_start(
 				global_network_game_client_get());
-			boolean waiting_for_machines = (global_network_game_server_get() &&
-				game->machine_count < 2);
+			struct network_game_server *server = global_network_game_server_get();
+			/* port: the host's own answer, which a host that may start alone
+			gives as "no" (multiplayer.start_alone) */
+			boolean waiting_for_machines = server &&
+				network_game_server_needs_more_machines(server);
 
 			ustrncpy(countdown_text->parameters.text_box.text, L"-:--", 15);
 			status_text->visible = TRUE;
@@ -2913,9 +2917,8 @@ static void multiplayer_game_directions(
 
 	if (server)
 	{
-		boolean waiting_for_machines = !network_game_is_splitscreen_local() &&
-			game &&
-			game->machine_count < 2;
+		/* port: the host's own answer (multiplayer.start_alone) */
+		boolean waiting_for_machines = network_game_server_needs_more_machines(server);
 
 		if (!waiting_for_machines &&
 			network_game_is_splitscreen_local() &&

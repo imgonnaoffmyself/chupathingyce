@@ -148,8 +148,8 @@ the setting for one start of the game. It has priority over the file.
 
 | Setting | Default | Environment variable | Function |
 | --- | --- | --- | --- |
-| `display.fullscreen` | `true` | `HALO_FULLSCREEN` | `true`: fullscreen at the resolution of the display. The picture has 480 lines of the game and the width of the display. `false`: a window with the 640x480 picture of the Xbox. F11 changes between the two. |
-| `display.window_scale` | `2` | `HALO_WINDOW_SCALE` | The size of the window, as a multiple of 640x480. You can change the size of the window. |
+| `display.fullscreen` | `true` | `HALO_FULLSCREEN` | `true`: fullscreen at the resolution of the display. The picture has 480 lines of the game and the width of the display. `false`: a window, which the game draws at the window's own resolution and shape, following the size you give it. F11 changes between the two. |
+| `display.window_scale` | `2` | `HALO_WINDOW_SCALE` | The size of the window, as a multiple of 640x480, and so the resolution the game draws at in it. You can change the size of the window. |
 | `display.vsync` | `true` | `HALO_NO_VSYNC=1` sets `false` | `true`: each frame waits for the display. |
 | `display.interpolation` | `true` | `HALO_INTERPOLATION` | `true`: one frame for each refresh of the display. `false`: 30 frames each second, as on the Xbox. Refer to "Frame rate". |
 | `display.direct_camera` | `true` | `HALO_DIRECT_CAMERA` | `true`: in first person, on foot, the view points where the player aims in each frame, not where the last tick left it. Refer to "Frame rate". |
@@ -173,6 +173,8 @@ the setting for one start of the game. It has priority over the file.
 | `network.signalling_brokers` | three public brokers | `HALO_NET_BROKERS` | The public MQTT brokers (`host:port`, with commas between them) that let the machines of an invite find each other. |
 | `network.stun_servers` | Google and Cloudflare | `HALO_NET_STUN` | The public STUN servers (`host:port`, with commas between them) that give the internet address of a machine. |
 | `discord.application_id` | the application of the project | `HALO_DISCORD_APPLICATION` | The Discord application for invites. Empty: no Discord. |
+| `multiplayer.bots` | `true` | `HALO_MULTIPLAYER_BOTS` | `true`: a slayer game this machine hosts is filled with bots, up to the players its map is for. Refer to "Bots". |
+| `multiplayer.start_alone` | `true` | `HALO_MULTIPLAYER_START_ALONE` | `true`: a host's game starts without waiting for another machine, its lobby counting down with one player. `false`: the game's rule of two machines, two players and, in a team game, a player on each team. |
 | `update.auto` | `true` | `HALO_UPDATE_AUTO` | `true`: at start-up, the game looks for a new version. Refer to "Updates". `false`: the game does not look. |
 | `debug.update_answer` | `""` | `HALO_UPDATE_ANSWER` | The answer to the update question, for automatic tests: `yes`, `no` or `never`. Empty: the game asks. |
 | `debug.exit_after` | `0.0` | `HALO_EXIT_AFTER` | The game stops after this number of seconds. `0`: never. |
@@ -281,6 +283,10 @@ These are the differences from the Xbox:
 - In campaign and in games of up to 16 players, the game removes garbage
   (bodies, dropped weapons) as on the Xbox. In larger games, it keeps more
   garbage, in proportion to the players.
+- A host does not have to wait for another machine: its lobby counts down
+  and the game starts with the players it has (`multiplayer.start_alone`).
+  The Xbox game would not start a game of one machine. With
+  `multiplayer.bots`, the bots fill it in the meantime.
 - The lobby shows the local machine and the first three remote machines.
   The other machines are also in the game.
 - In free-for-all games, each player is a team.
@@ -293,6 +299,33 @@ results, and all the ports:
 - Compile without fused multiply-add (`-ffp-contract=off`).
 - Use the math functions of musl (`port/include/halo_math.h`,
   `port/third_party/musl-math`), not the math functions of the system.
+
+### Bots
+
+A host fills a slayer game with bots up to the players its map is for
+(`multiplayer.bots`): 6 on putput and ratrace, 16 on bloodgulch, boarding
+action, hang 'em high and sidewinder, 8 on the others. A bot leaves for
+each player who joins, so friends are never kept out by them.
+
+- The host drives them: it makes their input each tick as it makes its own
+  players', and the netcode relays it as it relays any remote player's.
+  Thus the clients see them as they see remote players, and a dedicated
+  server's bots work the same way. Refer to `NETCODE.md`.
+- A bot roams the map, chases the enemy it can see, strafes it, jumps now
+  and then, and shoots with an aim that is a little off and settles on its
+  target. It does not drive vehicles and it plays no objective: the other
+  game types start with no bots.
+- The game a lobby plays is the variant its host has chosen in it, or,
+  while the host has chosen none, the playlist's, which is the variant a
+  game started from that lobby is given. The bots come for a playlist's
+  slayer as they do for a slayer the host picked.
+- A host may start the game without waiting for another machine
+  (`multiplayer.start_alone`), so a game of one player and its bots needs
+  nobody else: the lobby counts down as it does for any game, and players
+  who join during it take the bots' places.
+- The bots are `game/network_bots.c`; the two hooks the game has for them
+  are in `game/player_queues_new.c` (their input) and
+  `networking/network_game_globals.c` (the lobby's fill).
 
 ### Play on one computer
 

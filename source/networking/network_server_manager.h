@@ -40,6 +40,10 @@ boolean network_game_server_reset_to_pregame(
 void network_game_server_pause_countdown(
 	struct network_game_server *server,
 	boolean pause_countdown);
+/* port: whether the host waits for another machine before its game can start
+(the lobby's "waiting for machines"; multiplayer.start_alone) */
+boolean network_game_server_needs_more_machines(
+	struct network_game_server *server);
 void network_game_generate_join_game_token(
 	byte *join_token);
 void network_game_server_kick_machine(

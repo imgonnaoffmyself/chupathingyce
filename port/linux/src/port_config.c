@@ -74,9 +74,11 @@ static const struct config_setting config_settings[] =
 {
 	{ "display.fullscreen", _config_boolean, DEFAULT_FULLSCREEN, "HALO_FULLSCREEN", _environment_value, _platform_desktop,
 		"Start fullscreen, drawing at the display's resolution and shape; false\n"
-		"starts in a window, which draws the Xbox's 640x480. F11 switches." },
+		"starts in a window, which draws at its own resolution and shape, and so\n"
+		"follows the size you give it. F11 switches." },
 	{ "display.window_scale", _config_integer, "2", "HALO_WINDOW_SCALE", _environment_value, _platform_desktop,
-		"The window's size as a multiple of 640x480 (it can be resized)." },
+		"The window's size as a multiple of 640x480, and so the resolution the\n"
+		"game draws at in it (it can be resized)." },
 	{ "display.screen_width", _config_integer, "0", "HALO_SCREEN_WIDTH", _environment_value, _platform_android,
 		"Columns of the 480-line picture: 0 for the display's shape, 640 for the\n"
 		"Xbox's 4:3." },
@@ -179,6 +181,19 @@ static const struct config_setting config_settings[] =
 		_environment_value, _platform_desktop,
 		"The Discord application internet play invites go through while the\n"
 		"Discord desktop client runs; empty for none." },
+
+	{ "multiplayer.bots", _config_boolean, "true", "HALO_MULTIPLAYER_BOTS", _environment_value, _platform_all,
+		"Fill a slayer game this machine hosts with bots, up to the players its\n"
+		"map is for (6 to 16, by map), which leave as players join them. The\n"
+		"host drives them, so its clients see them as it does, and a dedicated\n"
+		"server's do too. Slayer only; false starts no game with bots." },
+
+	{ "multiplayer.start_alone", _config_boolean, "true", "HALO_MULTIPLAYER_START_ALONE", _environment_value,
+		_platform_all,
+		"Let a host start its game without waiting for another machine: its\n"
+		"lobby counts down with one player on one machine. False keeps the\n"
+		"game's rule of two machines, two players and, in a team game, a\n"
+		"player on each team." },
 
 	{ "update.auto", _config_boolean, "true", "HALO_UPDATE_AUTO", _environment_value, _platform_all,
 		"Look for a new version when the game starts, and offer to update to it;\n"
