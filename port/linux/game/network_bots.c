@@ -453,16 +453,43 @@ static boolean bot_remove_one(
 	return FALSE;
 }
 
+/* the game a host's lobby will play, and the map it will play it on: the
+settings its lobby holds, and, for the ones its host has not chosen (a new
+lobby's settings are empty, and a game then keeps the playlist's variant and
+plays the playlist's map: networking/network_game_manager.c), the playlist's
+stage, which is what a game that starts from this lobby will be given */
+static void bot_lobby_settings(
+	struct network_game const *game,
+	struct game_variant *variant,
+	char map_name[])
+{
+	struct game_variant stage_variant;
+	char stage_map_name[64];	/* (global_stage's map_name is 64) */
+	char const *name = game->map.name;
+
+	*variant = game->variant;
+	if (game_engine_get_current_stage(&stage_variant, stage_map_name))
+	{
+		if (variant->game_engine_index == game_engine_none)
+			*variant = stage_variant;
+		if (!name[0])
+			name = stage_map_name;
+	}
+	csstrncpy(map_name, name, 0x7f);
+	map_name[0x7f] = 0;
+}
+
 /* the bots a game is to have, and how many of its players are bots and how
 many are players of machines */
 static void bot_count(
 	struct network_game const *game,
+	char const *map_name,
 	long *wanted,
 	long *have,
 	long *players,
 	long players_by_team[])
 {
-	long target = network_bots_map_players(game->map.name);
+	long target = network_bots_map_players(map_name);
 	long index;
 
 	players_by_team[0] = players_by_team[1] = 0;
@@ -510,6 +537,8 @@ void network_bots_pregame_update(
 {
 	struct network_game_server *server;
 	struct network_game *game;
+	struct game_variant variant;
+	char map_name[0x80];
 	long players_by_team[BOT_TEAMS];
 	long wanted, have, players;
 	boolean changed = FALSE;
@@ -525,14 +554,20 @@ void network_bots_pregame_update(
 	game = server ? network_game_server_get_game(server) : NULL;
 	if (!game)
 		return;
-	/* slayer only (see the file's comment) */
-	if (game->variant.game_engine_index != game_engine_slayer)
+	/* slayer only (see the file's comment): the game this lobby will play,
+	which is the playlist's unless its host has chosen one */
+	bot_lobby_settings(game, &variant, map_name);
+	if (variant.game_engine_index != game_engine_slayer)
 		return;
 
-	/* the bots of the game that went are not these ones */
+	/* the bots of the game that went are not these ones, and neither are
+	their machines: a lobby that went left the game's list of machines
+	empty, so what is left here would keep a machine no bot can be a
+	player of, and a game that follows would fill up short */
 	csmemset(bots, 0, sizeof(bots));
+	bot_machines_release(game);
 
-	bot_count(game, &wanted, &have, &players, players_by_team);
+	bot_count(game, map_name, &wanted, &have, &players, players_by_team);
 	while (have < wanted && network_game_has_free_player_slot(game) &&
 		game->player_count < game->maximum_players)
 	{

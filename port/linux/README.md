@@ -315,6 +315,10 @@ each player who joins, so friends are never kept out by them.
   and then, and shoots with an aim that is a little off and settles on its
   target. It does not drive vehicles and it plays no objective: the other
   game types start with no bots.
+- The game a lobby plays is the variant its host has chosen in it, or,
+  while the host has chosen none, the playlist's, which is the variant a
+  game started from that lobby is given. The bots come for a playlist's
+  slayer as they do for a slayer the host picked.
 - A host may start the game without waiting for another machine
   (`multiplayer.start_alone`), so a game of one player and its bots needs
   nobody else: the lobby counts down as it does for any game, and players
