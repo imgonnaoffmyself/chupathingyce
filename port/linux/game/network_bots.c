@@ -35,6 +35,7 @@ objectives, which these do not.
 #include "math/real_math.h"
 #include "networking/network_game_globals.h"
 #include "networking/network_game_manager.h"
+#include "networking/network_messages.h"
 #include "networking/network_server_manager_internal.h"
 #include "networking/network_server_message_handler.h"
 #include "objects/objects.h"
@@ -532,6 +533,20 @@ void network_bots_make_room_for_player(
 	}
 }
 
+/* what the fill decided, said once: a host whose game gets no bots is told
+why in the game's log (debug.txt), as its lobby asks every tick */
+static char bot_reported[128];
+
+static void bot_report(
+	char const *text)
+{
+	if (!csstrcmp(bot_reported, text))
+		return;
+	csstrncpy(bot_reported, text, sizeof(bot_reported) - 1);
+	bot_reported[sizeof(bot_reported) - 1] = 0;
+	network_event("bots: %s", bot_reported);
+}
+
 void network_bots_pregame_update(
 	void)
 {
@@ -547,8 +562,12 @@ void network_bots_pregame_update(
 	game has are the ones its settings named when it started, which every
 	machine makes (network_game_create_game_objects), so a bot joins before
 	the game does or not at all */
-	if (!config_boolean("multiplayer.bots") ||
-		game_connection() != _game_connection_network_server || game_in_progress())
+	if (!config_boolean("multiplayer.bots"))
+	{
+		bot_report("off (multiplayer.bots)");
+		return;
+	}
+	if (game_connection() != _game_connection_network_server || game_in_progress())
 		return;
 	server = global_network_game_server_get();
 	game = server ? network_game_server_get_game(server) : NULL;
@@ -558,7 +577,14 @@ void network_bots_pregame_update(
 	which is the playlist's unless its host has chosen one */
 	bot_lobby_settings(game, &variant, map_name);
 	if (variant.game_engine_index != game_engine_slayer)
+	{
+		char text[128];
+
+		csprintf(text, "the game is %d, and only a slayer gets bots (slayer is %d)",
+			(int)variant.game_engine_index, (int)game_engine_slayer);
+		bot_report(text);
 		return;
+	}
 
 	/* the bots of the game that went are not these ones, and neither are
 	their machines: a lobby that went left the game's list of machines
@@ -589,6 +615,13 @@ void network_bots_pregame_update(
 	/* and the settings every machine has are the ones that changed */
 	if (changed)
 		network_game_server_send_game_data_pregame(server);
+	{
+		char text[128];
+
+		csprintf(text, "%d of its players are machines, and it has %d bots, on %s",
+			(int)players, (int)have, map_name[0] ? map_name : "a map with no name");
+		bot_report(text);
+	}
 }
 
 /* ---------- the bots' play ---------- */
